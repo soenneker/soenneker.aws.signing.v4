@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using Soenneker.Utils.PooledStringBuilders;
 
 namespace Soenneker.Aws.Signing.V4;
 
@@ -160,7 +161,7 @@ public sealed class AwsSignatureV4Signer : IAwsSignatureV4Signer
         try
         {
             int byteCount = Encoding.UTF8.GetBytes(value, bytes);
-            var builder = new StringBuilder(byteCount);
+            using var builder = new PooledStringBuilder(byteCount);
 
             foreach (byte valueByte in bytes[..byteCount])
             {
