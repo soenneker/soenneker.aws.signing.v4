@@ -1,5 +1,6 @@
 using Soenneker.Aws.Signing.V4.Abstract;
 using Soenneker.Aws.Signing.V4.Dtos;
+using Soenneker.Hashing.Sha256;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -14,6 +15,8 @@ namespace Soenneker.Aws.Signing.V4;
 /// <inheritdoc cref="IAwsSignatureV4Signer" />
 public sealed class AwsSignatureV4Signer : IAwsSignatureV4Signer
 {
+    private static readonly Sha256HashingUtil _sha256 = new();
+
     private const string _algorithm = "AWS4-HMAC-SHA256";
     private const string _requestType = "aws4_request";
     private const string _hostHeader = "host";
@@ -211,8 +214,7 @@ public sealed class AwsSignatureV4Signer : IAwsSignatureV4Signer
         }
     }
 
-    private static string Sha256Hex(string value) =>
-        Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
+    private static string Sha256Hex(string value) => _sha256.Hash(value);
 
     private static byte[] HmacSha256(byte[] key, string value) =>
         HMACSHA256.HashData(key, Encoding.UTF8.GetBytes(value));
