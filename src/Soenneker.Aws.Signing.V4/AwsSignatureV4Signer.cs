@@ -11,6 +11,7 @@ using Soenneker.Utils.PooledStringBuilders;
 
 namespace Soenneker.Aws.Signing.V4;
 
+/// <inheritdoc cref="IAwsSignatureV4Signer" />
 public sealed class AwsSignatureV4Signer : IAwsSignatureV4Signer
 {
     private const string _algorithm = "AWS4-HMAC-SHA256";
