@@ -93,9 +93,10 @@ public sealed class AwsSignatureV4Signer : IAwsSignatureV4Signer
     private static List<KeyValuePair<string, string>> BuildSigningQuery(AwsSignatureV4PresignRequest request,
         string scope, string timestamp, string signedHeaders)
     {
-        List<KeyValuePair<string, string>> result = request.QueryParameters is null
-            ? []
-            : [.. request.QueryParameters];
+        var result = new List<KeyValuePair<string, string>>((request.QueryParameters?.Count ?? 0) + 6);
+
+        if (request.QueryParameters is not null)
+            result.AddRange(request.QueryParameters);
         result.Add(new KeyValuePair<string, string>("X-Amz-Algorithm", _algorithm));
         result.Add(new KeyValuePair<string, string>("X-Amz-Credential", $"{request.Credentials.AccessKeyId}/{scope}"));
         result.Add(new KeyValuePair<string, string>("X-Amz-Date", timestamp));
@@ -135,7 +136,17 @@ public sealed class AwsSignatureV4Signer : IAwsSignatureV4Signer
             }
         }
 
-        string canonicalHeaders = string.Concat(values.Select(static pair => $"{pair.Key}:{pair.Value}\n"));
+        using var builder = new PooledStringBuilder();
+
+        foreach (KeyValuePair<string, string> pair in values)
+        {
+            builder.Append(pair.Key);
+            builder.Append(':');
+            builder.Append(pair.Value);
+            builder.Append('\n');
+        }
+
+        string canonicalHeaders = builder.ToString();
         string signedHeaders = string.Join(';', values.Keys);
         return (canonicalHeaders, signedHeaders);
     }
@@ -143,15 +154,34 @@ public sealed class AwsSignatureV4Signer : IAwsSignatureV4Signer
     private static string NormalizeHeaderValue(string value) =>
         string.Join(' ', value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 
-    private static string BuildCanonicalQuery(IEnumerable<KeyValuePair<string, string>> parameters)
+    private static string BuildCanonicalQuery(List<KeyValuePair<string, string>> parameters)
     {
-        return string.Join('&',
-            parameters
-                .Select(static pair =>
-                    new KeyValuePair<string, string>(UriEncode(pair.Key, true), UriEncode(pair.Value, true)))
-                .OrderBy(static pair => pair.Key, StringComparer.Ordinal)
-                .ThenBy(static pair => pair.Value, StringComparer.Ordinal)
-                .Select(static pair => $"{pair.Key}={pair.Value}"));
+        for (int i = 0; i < parameters.Count; i++)
+        {
+            KeyValuePair<string, string> pair = parameters[i];
+            parameters[i] = new KeyValuePair<string, string>(UriEncode(pair.Key, true), UriEncode(pair.Value, true));
+        }
+
+        parameters.Sort(static (left, right) =>
+        {
+            int comparison = StringComparer.Ordinal.Compare(left.Key, right.Key);
+            return comparison != 0 ? comparison : StringComparer.Ordinal.Compare(left.Value, right.Value);
+        });
+
+        using var builder = new PooledStringBuilder();
+
+        for (int i = 0; i < parameters.Count; i++)
+        {
+            if (i != 0)
+                builder.Append('&');
+
+            KeyValuePair<string, string> pair = parameters[i];
+            builder.Append(pair.Key);
+            builder.Append('=');
+            builder.Append(pair.Value);
+        }
+
+        return builder.ToString();
     }
 
     private static string UriEncode(string value, bool encodeSlash)
@@ -178,7 +208,9 @@ public sealed class AwsSignatureV4Signer : IAwsSignatureV4Signer
                 else
                 {
                     builder.Append('%');
-                    builder.Append(valueByte.ToString("X2", CultureInfo.InvariantCulture));
+                    const string hex = "0123456789ABCDEF";
+                    builder.Append(hex[valueByte >> 4]);
+                    builder.Append(hex[valueByte & 0xF]);
                 }
             }
 
