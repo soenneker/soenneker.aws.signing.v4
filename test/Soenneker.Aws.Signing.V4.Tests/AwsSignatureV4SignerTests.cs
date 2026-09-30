@@ -19,7 +19,7 @@ public sealed class AwsSignatureV4SignerTests : HostedUnitTest
     }
 
     [Test]
-    public async Task PresignUrl_should_match_Aws_S3_test_vector()
+    public async ValueTask PresignUrl_should_match_Aws_S3_test_vector()
     {
         var request = new AwsSignatureV4PresignRequest
         {
@@ -46,7 +46,7 @@ public sealed class AwsSignatureV4SignerTests : HostedUnitTest
     }
 
     [Test]
-    public async Task PresignUrl_should_include_existing_query_headers_and_session_token()
+    public async ValueTask PresignUrl_should_include_existing_query_headers_and_session_token()
     {
         var request = new AwsSignatureV4PresignRequest
         {
@@ -82,7 +82,7 @@ public sealed class AwsSignatureV4SignerTests : HostedUnitTest
     }
 
     [Test]
-    public async Task PresignUrl_should_reject_reserved_query_parameters()
+    public async ValueTask PresignUrl_should_reject_reserved_query_parameters()
     {
         var request = new AwsSignatureV4PresignRequest
         {
