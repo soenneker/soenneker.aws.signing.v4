@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Soenneker.Aws.Signing.V4.Tests;
 
@@ -19,7 +20,7 @@ public sealed class AwsSignatureV4SignerTests : HostedUnitTest
     }
 
     [Test]
-    public async ValueTask PresignUrl_should_match_Aws_S3_test_vector()
+    public async ValueTask PresignUrl_should_match_Aws_S3_test_vector(CancellationToken cancellationToken)
     {
         var request = new AwsSignatureV4PresignRequest
         {
@@ -46,7 +47,7 @@ public sealed class AwsSignatureV4SignerTests : HostedUnitTest
     }
 
     [Test]
-    public async ValueTask PresignUrl_should_include_existing_query_headers_and_session_token()
+    public async ValueTask PresignUrl_should_include_existing_query_headers_and_session_token(CancellationToken cancellationToken)
     {
         var request = new AwsSignatureV4PresignRequest
         {
@@ -82,7 +83,7 @@ public sealed class AwsSignatureV4SignerTests : HostedUnitTest
     }
 
     [Test]
-    public async ValueTask PresignUrl_should_reject_reserved_query_parameters()
+    public async ValueTask PresignUrl_should_reject_reserved_query_parameters(CancellationToken cancellationToken)
     {
         var request = new AwsSignatureV4PresignRequest
         {
