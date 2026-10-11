@@ -45,6 +45,6 @@
 
     <ItemGroup>
         <PackageReference Include="Soenneker.Hashing.Sha256" Version="4.0.7" />
-        <PackageReference Include="Soenneker.Utils.PooledStringBuilders" Version="4.0.34" />
+        <PackageReference Include="Soenneker.Utils.PooledStringBuilders" Version="4.0.35" />
     </ItemGroup>
 </Project>
